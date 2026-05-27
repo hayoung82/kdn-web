@@ -217,7 +217,13 @@ export default function LoginPage({ onLogin }) {
           </div>
         )}
 
-        <div className="px-6 pb-4 pt-3 text-center" style={{ borderTop: '1px solid #1a1f35' }}>
+        <div className="px-6 pb-4 pt-3 text-center space-y-2" style={{ borderTop: '1px solid #1a1f35' }}>
+          <p className="text-xs" style={{ color: '#4a5070' }}>
+            테스트 계정&nbsp;
+            <span className="font-bold px-1.5 py-0.5 rounded" style={{ color: '#a78bfa', background: 'rgba(124,92,255,0.12)' }}>admin</span>
+            &nbsp;/&nbsp;
+            <span className="font-bold px-1.5 py-0.5 rounded" style={{ color: '#a78bfa', background: 'rgba(124,92,255,0.12)' }}>admin</span>
+          </p>
           <p className="text-xs" style={{ color: '#2e3450' }}>© 2026 KDN 전력관리시스템</p>
         </div>
       </div>
