@@ -38,7 +38,7 @@ export default function App() {
   const PageComponent = pages[activeTab] || DashboardPage;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100">
+    <div className="flex flex-col h-screen bg-[#F0F2F8]">
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar

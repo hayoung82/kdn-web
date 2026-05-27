@@ -7,7 +7,9 @@
 }
 
 body {
-  font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
-  background: #f1f5f9;
-  color: #1e293b;
+  font-family: 'Noto Sans KR', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F0F2F8;
+  color: #0F1B33;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
