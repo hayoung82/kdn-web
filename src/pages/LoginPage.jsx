@@ -48,15 +48,18 @@ export default function LoginPage({ onLogin }) {
 
         {/* 폼 */}
         <div className="px-6 py-6 space-y-3">
-          <div className="relative">
-            <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#4a5070' }} />
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <User size={13} style={{ color: '#4a5070' }} />
+              <span className="text-xs font-semibold" style={{ color: '#4a5070' }}>아이디</span>
+            </div>
             <input
               type="text"
-              placeholder="아이디"
+              placeholder="아이디를 입력하세요"
               value={id}
               onChange={e => { setId(e.target.value); setError(''); }}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 text-sm rounded-xl outline-none transition-all"
+              className="w-full px-4 py-3 text-sm rounded-xl outline-none transition-all"
               style={{
                 background: '#0d1120',
                 border: '1px solid #232843',
@@ -66,15 +69,18 @@ export default function LoginPage({ onLogin }) {
               onBlur={e => { e.target.style.borderColor = '#232843'; e.target.style.boxShadow = 'none'; }}
             />
           </div>
-          <div className="relative">
-            <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#4a5070' }} />
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Lock size={13} style={{ color: '#4a5070' }} />
+              <span className="text-xs font-semibold" style={{ color: '#4a5070' }}>비밀번호</span>
+            </div>
             <input
               type="password"
-              placeholder="비밀번호"
+              placeholder="비밀번호를 입력하세요"
               value={pw}
               onChange={e => { setPw(e.target.value); setError(''); }}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 text-sm rounded-xl outline-none transition-all"
+              className="w-full px-4 py-3 text-sm rounded-xl outline-none transition-all"
               style={{
                 background: '#0d1120',
                 border: '1px solid #232843',

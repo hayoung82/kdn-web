@@ -1,10 +1,12 @@
+import { useState, useCallback } from 'react';
 import { equipmentList, alerts, hourlyLoadData, alertTrendData } from '../data/mockData';
 import { EquipmentStatusBadge, SeverityBadge } from '../components/StatusBadge';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
-import { AlertTriangle, CheckCircle, Wrench, Activity, Zap, Thermometer, Wifi, Calendar } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Wrench, Activity, Zap, Thermometer, Wifi, Calendar, Plus, X, ChevronDown, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const CARD = 'rounded-2xl overflow-hidden';
 const CARD_STYLE = { background: '#131829', border: '1px solid #232843' };
@@ -53,7 +55,55 @@ function StatCard({ title, value, sub, icon: Icon, gradient, glowColor }) {
   );
 }
 
+const RESULT_OPTIONS = ['이상없음', '요주의', '점검중', '불량'];
+const TYPE_OPTIONS = ['정기점검', '예방점검', '동작시험', '절연저항측정', '부분방전측정', '청소 및 점검', '기타'];
+const EMPTY_FORM = { equipmentName: '', equipmentId: '', type: '정기점검', inspector: '', date: '', result: '이상없음', note: '' };
+const INPUT = { background: '#0d1120', border: '1px solid #232843', color: '#f4f5f9', borderRadius: '12px', padding: '10px 12px', fontSize: '14px', width: '100%', outline: 'none' };
+
 export default function DashboardPage() {
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = useCallback((message, type = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  const handleChange = (f, v) => {
+    setForm(prev => ({ ...prev, [f]: v }));
+    if (errors[f]) setErrors(prev => ({ ...prev, [f]: undefined }));
+  };
+
+  const handleSubmit = async () => {
+    const e = {};
+    if (!form.equipmentName.trim()) e.equipmentName = '설비명을 입력하세요';
+    if (!form.inspector.trim()) e.inspector = '담당자를 입력하세요';
+    if (!form.date) e.date = '점검일을 선택하세요';
+    if (Object.keys(e).length > 0) { setErrors(e); return; }
+    setSubmitting(true);
+    const { error } = await supabase.from('inspection_reports').insert([{
+      equipment_id: form.equipmentId || '-',
+      equipment_name: form.equipmentName,
+      type: form.type,
+      inspector: form.inspector,
+      date: form.date,
+      result: form.result,
+      note: form.note,
+    }]);
+    if (error) {
+      showToast('등록에 실패했습니다: ' + error.message);
+    } else {
+      setForm(EMPTY_FORM); setErrors({}); setShowModal(false);
+      showToast('점검 이력이 등록되었습니다.', 'success');
+    }
+    setSubmitting(false);
+  };
+
+  const errStyle = (f) => ({ ...INPUT, borderColor: errors[f] ? '#ef4444' : '#232843' });
+
   const normalCount = equipmentList.filter(e => e.status === 'normal').length;
   const faultCount = equipmentList.filter(e => e.status === 'fault').length;
   const warningCount = equipmentList.filter(e => e.status === 'warning').length;
@@ -65,20 +115,42 @@ export default function DashboardPage() {
   const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
 
   return (
+    <>
+    {toast && (
+      <div className="fixed top-5 right-5 z-[100] flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-semibold shadow-2xl"
+           style={{
+             background: toast.type === 'success' ? 'rgba(0,211,167,0.12)' : 'rgba(239,68,68,0.12)',
+             border: `1px solid ${toast.type === 'success' ? 'rgba(0,211,167,0.3)' : 'rgba(239,68,68,0.3)'}`,
+             color: toast.type === 'success' ? '#00d3a7' : '#f87171',
+             backdropFilter: 'blur(8px)', maxWidth: '360px',
+           }}>
+        {toast.type === 'success' ? <CheckCircle2 size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
+        <span>{toast.message}</span>
+        <button onClick={() => setToast(null)} className="ml-auto shrink-0 opacity-60 hover:opacity-100"><X size={14} /></button>
+      </div>
+    )}
+
     <div className="p-6 space-y-7">
 
       {/* 페이지 헤더 */}
-      <div className="pb-5" style={{ borderBottom: '1px solid #232843' }}>
-        <h2 className="text-xl font-black tracking-tight" style={{ color: '#f4f5f9' }}>대시보드</h2>
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className="flex items-center gap-1.5 text-xs" style={{ color: '#4a5070' }}>
-            <Calendar size={11} />{dateStr}
-          </span>
-          <span className="w-1 h-1 rounded-full" style={{ background: '#232843' }} />
-          <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#00d3a7' }}>
-            <Wifi size={11} />실시간 연결중
-          </span>
+      <div className="pb-5 flex items-center justify-between" style={{ borderBottom: '1px solid #232843' }}>
+        <div>
+          <h2 className="text-xl font-black tracking-tight" style={{ color: '#f4f5f9' }}>대시보드</h2>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="flex items-center gap-1.5 text-xs" style={{ color: '#4a5070' }}>
+              <Calendar size={11} />{dateStr}
+            </span>
+            <span className="w-1 h-1 rounded-full" style={{ background: '#232843' }} />
+            <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#00d3a7' }}>
+              <Wifi size={11} />실시간 연결중
+            </span>
+          </div>
         </div>
+        <button onClick={() => { setShowModal(true); setForm(EMPTY_FORM); setErrors({}); }}
+          className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all"
+          style={{ background: 'linear-gradient(135deg, #5b21b6 0%, #7c5cff 100%)', boxShadow: '0 4px 16px rgba(124,92,255,0.3)' }}>
+          <Plus size={15} />점검 등록
+        </button>
       </div>
 
       {/* 긴급 알림 */}
@@ -210,5 +282,112 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+
+    {/* 점검 등록 모달 */}
+    {showModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+           style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+           onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl"
+             style={{ background: '#131829', border: '1px solid #232843', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #232843', background: '#0d1120' }}>
+            <h3 className="text-base font-bold flex items-center gap-2" style={{ color: '#f4f5f9' }}>
+              <Plus size={16} style={{ color: '#7c5cff' }} />점검 이력 등록
+            </h3>
+            <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg transition-colors" style={{ color: '#4a5070' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = ''}>
+              <X size={18} />
+            </button>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>설비명 <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" placeholder="예: 주변압기 1호" value={form.equipmentName}
+                  onChange={e => handleChange('equipmentName', e.target.value)}
+                  style={errStyle('equipmentName')}
+                  onFocus={e => { if (!errors.equipmentName) e.target.style.borderColor = '#7c5cff'; }}
+                  onBlur={e => { if (!errors.equipmentName) e.target.style.borderColor = '#232843'; }} />
+                {errors.equipmentName && <p className="text-xs mt-1" style={{ color: '#f87171' }}>{errors.equipmentName}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>설비 ID</label>
+                <input type="text" placeholder="예: TR-001" value={form.equipmentId}
+                  onChange={e => handleChange('equipmentId', e.target.value)}
+                  style={INPUT}
+                  onFocus={e => e.target.style.borderColor = '#7c5cff'}
+                  onBlur={e => e.target.style.borderColor = '#232843'} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>점검 유형</label>
+                <div className="relative">
+                  <select value={form.type} onChange={e => handleChange('type', e.target.value)}
+                    style={{ ...INPUT, appearance: 'none', cursor: 'pointer' }}
+                    onFocus={e => e.target.style.borderColor = '#7c5cff'}
+                    onBlur={e => e.target.style.borderColor = '#232843'}>
+                    {TYPE_OPTIONS.map(t => <option key={t} style={{ background: '#131829' }}>{t}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#4a5070' }} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>결과</label>
+                <div className="relative">
+                  <select value={form.result} onChange={e => handleChange('result', e.target.value)}
+                    style={{ ...INPUT, appearance: 'none', cursor: 'pointer' }}
+                    onFocus={e => e.target.style.borderColor = '#7c5cff'}
+                    onBlur={e => e.target.style.borderColor = '#232843'}>
+                    {RESULT_OPTIONS.map(r => <option key={r} style={{ background: '#131829' }}>{r}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#4a5070' }} />
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>담당자 <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" placeholder="예: 홍길동" value={form.inspector}
+                  onChange={e => handleChange('inspector', e.target.value)}
+                  style={errStyle('inspector')}
+                  onFocus={e => { if (!errors.inspector) e.target.style.borderColor = '#7c5cff'; }}
+                  onBlur={e => { if (!errors.inspector) e.target.style.borderColor = '#232843'; }} />
+                {errors.inspector && <p className="text-xs mt-1" style={{ color: '#f87171' }}>{errors.inspector}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>점검일 <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="date" value={form.date} onChange={e => handleChange('date', e.target.value)}
+                  style={{ ...errStyle('date'), colorScheme: 'dark' }}
+                  onFocus={e => { if (!errors.date) e.target.style.borderColor = '#7c5cff'; }}
+                  onBlur={e => { if (!errors.date) e.target.style.borderColor = '#232843'; }} />
+                {errors.date && <p className="text-xs mt-1" style={{ color: '#f87171' }}>{errors.date}</p>}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold mb-1.5" style={{ color: '#969cb1' }}>비고</label>
+              <textarea rows={3} placeholder="점검 내용, 특이사항 등을 입력하세요"
+                value={form.note} onChange={e => handleChange('note', e.target.value)}
+                style={{ ...INPUT, resize: 'none' }}
+                onFocus={e => e.target.style.borderColor = '#7c5cff'}
+                onBlur={e => e.target.style.borderColor = '#232843'} />
+            </div>
+          </div>
+          <div className="flex gap-2 px-6 py-4" style={{ borderTop: '1px solid #232843', background: '#0d1120' }}>
+            <button onClick={() => setShowModal(false)}
+              className="flex-1 py-2.5 text-sm font-semibold rounded-xl"
+              style={{ background: '#1a1f35', color: '#969cb1', border: '1px solid #232843' }}>취소</button>
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #5b21b6 0%, #7c5cff 100%)', boxShadow: '0 4px 16px rgba(124,92,255,0.3)' }}>
+              {submitting && <Loader2 size={14} className="animate-spin" />}
+              {submitting ? '저장 중...' : '등록'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
