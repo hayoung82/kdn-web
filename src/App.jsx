@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AlertsPage from './pages/AlertsPage';
 import EquipmentPage from './pages/EquipmentPage';
@@ -11,11 +12,11 @@ import { Settings } from 'lucide-react';
 function SettingsPage() {
   return (
     <div className="p-4">
-      <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
-        <Settings size={18} className="text-slate-500" />
+      <h2 className="text-base font-bold text-[#0F1B33] flex items-center gap-2 mb-4">
+        <Settings size={18} className="text-[#7A89AB]" />
         설정
       </h2>
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-sm text-slate-500">
+      <div className="bg-white/75 backdrop-blur-md rounded-2xl border border-white/60 shadow-[0_8px_32px_rgba(15,27,51,0.12)] p-6 text-sm text-[#7A89AB]">
         설정 페이지 (준비 중)
       </div>
     </div>
@@ -32,14 +33,19 @@ const pages = {
 };
 
 export default function App() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!user) {
+    return <LoginPage onLogin={setUser} />;
+  }
 
   const PageComponent = pages[activeTab] || DashboardPage;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F2F8]">
-      <Header onMenuClick={() => setSidebarOpen(true)} />
+    <div className="flex flex-col h-screen bg-transparent">
+      <Header onMenuClick={() => setSidebarOpen(true)} user={user} onLogout={() => setUser(null)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           activeTab={activeTab}

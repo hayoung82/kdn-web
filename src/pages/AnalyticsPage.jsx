@@ -3,20 +3,35 @@ import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line
 } from 'recharts';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, TrendingUp, AlertTriangle, Activity } from 'lucide-react';
 
-const CARD = 'bg-white rounded-xl border border-[#DDE2EE] shadow-[0_2px_8px_rgba(15,27,51,0.06)]';
-
-const STATUS_COLORS = {
-  정상: '#10b981',
-  경고: '#f59e0b',
-  고장: '#ef4444',
-  점검중: '#3D6FE0',
-};
-
+const GLASS = 'bg-white/75 backdrop-blur-md rounded-xl border border-white/60 shadow-[0_8px_32px_rgba(15,27,51,0.12)]';
+const DIVIDER = <div className="border-t border-black/5 my-4" />;
+const tooltipStyle = { borderColor: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 12, background: 'rgba(255,255,255,0.95)' };
+const STATUS_COLORS = { 정상: '#10b981', 경고: '#f59e0b', 고장: '#ef4444', 점검중: '#3D6FE0' };
 const TYPE_COLORS = ['#3D6FE0', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
-const tooltipStyle = { borderColor: '#DDE2EE', borderRadius: 8, fontSize: 12 };
+function SectionTitle({ icon: Icon, iconColor, children }) {
+  return (
+    <h3 className="text-sm font-bold text-[#0F1B33] flex items-center gap-2">
+      <span className="inline-block w-1 h-4 rounded-full flex-shrink-0" style={{ background: iconColor }} />
+      <Icon size={15} style={{ color: iconColor }} />
+      {children}
+    </h3>
+  );
+}
+
+function MetricCard({ label, value, unit, gradient }) {
+  return (
+    <div className="rounded-xl p-4 text-white relative overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.12)]" style={{ background: gradient }}>
+      <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, white, transparent 60%)' }} />
+      <p className="text-xs font-medium opacity-75 relative">{label}</p>
+      <p className="text-3xl font-black mt-1 tracking-tight relative">
+        {value}<span className="text-base font-normal opacity-70 ml-1">{unit}</span>
+      </p>
+    </div>
+  );
+}
 
 export default function AnalyticsPage() {
   const statusData = [
@@ -34,52 +49,45 @@ export default function AnalyticsPage() {
   const maxLoad = Math.max(...hourlyLoadData.map(d => d['부하율']));
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-5 space-y-6">
       <h2 className="text-base font-bold text-[#0F1B33] flex items-center gap-2">
-        <BarChart3 size={18} className="text-[#3D6FE0]" />
-        통계 분석
+        <BarChart3 size={18} className="text-[#3D6FE0]" />통계 분석
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className={`${CARD} p-4 text-center`}>
-          <p className="text-xs text-[#7A89AB] font-medium">총 설비 수</p>
-          <p className="text-3xl font-bold text-[#0F1B33] mt-1 tracking-tight">{equipmentList.length}<span className="text-sm font-normal text-[#7A89AB] ml-1">대</span></p>
-        </div>
-        <div className={`${CARD} p-4 text-center`}>
-          <p className="text-xs text-[#7A89AB] font-medium">오늘 평균 부하율</p>
-          <p className={`text-3xl font-bold mt-1 tracking-tight ${avgLoad >= 80 ? 'text-amber-500' : 'text-[#3D6FE0]'}`}>{avgLoad}<span className="text-sm font-normal text-[#7A89AB] ml-1">%</span></p>
-        </div>
-        <div className={`${CARD} p-4 text-center`}>
-          <p className="text-xs text-[#7A89AB] font-medium">오늘 최대 부하율</p>
-          <p className={`text-3xl font-bold mt-1 tracking-tight ${maxLoad >= 100 ? 'text-red-600' : maxLoad >= 80 ? 'text-amber-500' : 'text-emerald-600'}`}>{maxLoad}<span className="text-sm font-normal text-[#7A89AB] ml-1">%</span></p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <MetricCard label="총 설비 수" value={equipmentList.length} unit="대"
+          gradient="linear-gradient(135deg, #2A5CD0 0%, #3D6FE0 100%)" />
+        <MetricCard label="오늘 평균 부하율" value={avgLoad} unit="%"
+          gradient={avgLoad >= 80 ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)'} />
+        <MetricCard label="오늘 최대 부하율" value={maxLoad} unit="%"
+          gradient={maxLoad >= 100 ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' : maxLoad >= 80 ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)'} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className={`${CARD} p-4`}>
-          <h3 className="text-sm font-semibold text-[#0F1B33] mb-3">설비 상태 분포</h3>
-          <ResponsiveContainer width="100%" height={260}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className={`${GLASS} p-5`}>
+          <SectionTitle icon={Activity} iconColor="#3D6FE0">설비 상태 분포</SectionTitle>
+          {DIVIDER}
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value">
-                {statusData.map((entry) => (
-                  <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
-                ))}
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} dataKey="value" paddingAngle={3}>
+                {statusData.map((entry) => <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />)}
               </Pie>
-              <Tooltip formatter={(value, name) => [`${value}대`, name]} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(v, n) => [`${v}대`, n]} contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className={`${CARD} p-4`}>
-          <h3 className="text-sm font-semibold text-[#0F1B33] mb-3">설비 유형별 현황</h3>
-          <ResponsiveContainer width="100%" height={220}>
+        <div className={`${GLASS} p-5`}>
+          <SectionTitle icon={BarChart3} iconColor="#8b5cf6">설비 유형별 현황</SectionTitle>
+          {DIVIDER}
+          <ResponsiveContainer width="100%" height={210}>
             <BarChart data={typeData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#DDE2EE" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#7A89AB' }} />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#7A89AB' }} width={55} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,27,51,0.08)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#7A89AB' }} axisLine={false} tickLine={false} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#7A89AB' }} width={55} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                 {typeData.map((_, i) => <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />)}
               </Bar>
             </BarChart>
@@ -87,32 +95,34 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className={`${CARD} p-4`}>
-          <h3 className="text-sm font-semibold text-[#0F1B33] mb-3">오늘 시간별 부하율</h3>
-          <ResponsiveContainer width="100%" height={200}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className={`${GLASS} p-5`}>
+          <SectionTitle icon={TrendingUp} iconColor="#3D6FE0">오늘 시간별 부하율</SectionTitle>
+          {DIVIDER}
+          <ResponsiveContainer width="100%" height={190}>
             <LineChart data={hourlyLoadData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#DDE2EE" />
-              <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#7A89AB' }} />
-              <YAxis domain={[0, 120]} unit="%" tick={{ fontSize: 11, fill: '#7A89AB' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,27,51,0.08)" />
+              <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#7A89AB' }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 120]} unit="%" tick={{ fontSize: 11, fill: '#7A89AB' }} axisLine={false} tickLine={false} />
               <Tooltip formatter={v => `${v}%`} contentStyle={tooltipStyle} />
-              <Line type="monotone" dataKey="부하율" stroke="#3D6FE0" strokeWidth={2} dot={{ r: 3, fill: '#3D6FE0' }} />
+              <Line type="monotone" dataKey="부하율" stroke="#3D6FE0" strokeWidth={2.5} dot={{ r: 3, fill: '#3D6FE0' }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className={`${CARD} p-4`}>
-          <h3 className="text-sm font-semibold text-[#0F1B33] mb-3">7일 알림 발생 추이</h3>
-          <ResponsiveContainer width="100%" height={200}>
+        <div className={`${GLASS} p-5`}>
+          <SectionTitle icon={AlertTriangle} iconColor="#f59e0b">7일 알림 발생 추이</SectionTitle>
+          {DIVIDER}
+          <ResponsiveContainer width="100%" height={190}>
             <BarChart data={alertTrendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#DDE2EE" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#7A89AB' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#7A89AB' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,27,51,0.08)" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#7A89AB' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#7A89AB' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="긴급" fill="#ef4444" stackId="a" />
               <Bar dataKey="경고" fill="#f59e0b" stackId="a" />
-              <Bar dataKey="정보" fill="#3D6FE0" stackId="a" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="정보" fill="#3D6FE0" stackId="a" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
