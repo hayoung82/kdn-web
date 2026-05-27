@@ -70,7 +70,7 @@ export default function Header({ onMenuClick, user, onLogout }) {
           <div className="flex items-center gap-2 border-l pl-3" style={{ borderColor: '#232843' }}>
             <div className="flex items-center gap-1.5 text-xs text-[#969cb1]">
               <UserCircle size={15} className="text-[#4a5070]" />
-              <span className="hidden sm:inline">{user.name}</span>
+              <span className="hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
             </div>
             <button onClick={onLogout}
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-[#4a5070] hover:text-[#969cb1]"

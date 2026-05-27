@@ -1,12 +1,32 @@
 import { LayoutDashboard, AlertTriangle, Cpu, BarChart3, ClipboardList, Settings, X } from 'lucide-react';
 
-const navItems = [
-  { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
-  { id: 'alerts', label: '알림/고장 현황', icon: AlertTriangle },
-  { id: 'equipment', label: '설비 목록', icon: Cpu },
-  { id: 'analytics', label: '통계 분석', icon: BarChart3 },
-  { id: 'reports', label: '점검 이력', icon: ClipboardList },
-  { id: 'settings', label: '설정', icon: Settings },
+const navGroups = [
+  {
+    label: '메인',
+    items: [
+      { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: '운영 현황',
+    items: [
+      { id: 'alerts', label: '알림/고장 현황', icon: AlertTriangle },
+      { id: 'equipment', label: '설비 목록', icon: Cpu },
+      { id: 'reports', label: '점검 이력', icon: ClipboardList },
+    ],
+  },
+  {
+    label: '분석',
+    items: [
+      { id: 'analytics', label: '통계 분석', icon: BarChart3 },
+    ],
+  },
+  {
+    label: '시스템',
+    items: [
+      { id: 'settings', label: '설정', icon: Settings },
+    ],
+  },
 ];
 
 export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
@@ -16,15 +36,8 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
         <div className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={onClose} />
       )}
       <aside
-        className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-56
-          flex flex-col transition-transform duration-300
-        `}
-        style={{
-          background: '#0d1120',
-          borderRight: '1px solid #232843',
-          transform: isOpen ? 'translateX(0)' : undefined,
-        }}
+        className="fixed lg:static inset-y-0 left-0 z-50 w-56 flex flex-col transition-transform duration-300"
+        style={{ background: '#0d1120', borderRight: '1px solid #232843' }}
       >
         <style>{`
           @media (max-width: 1023px) {
@@ -42,26 +55,32 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
         </div>
 
         {/* 네비게이션 */}
-        <nav className="flex-1 px-2.5 py-3 space-y-0.5">
-          {navItems.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => { onTabChange(id); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
-              style={activeTab === id ? {
-                background: 'rgba(124,92,255,0.18)',
-                color: '#a78bfa',
-                borderLeft: '3px solid #7c5cff',
-                paddingLeft: '9px',
-              } : {
-                color: '#4a5070',
-              }}
-              onMouseEnter={e => { if (activeTab !== id) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#969cb1'; }}}
-              onMouseLeave={e => { if (activeTab !== id) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#4a5070'; }}}
-            >
-              <Icon size={16} style={{ color: activeTab === id ? '#7c5cff' : '#4a5070' }} />
-              {label}
-            </button>
+        <nav className="flex-1 px-2.5 py-4 space-y-1">
+          {navGroups.map((group, gi) => (
+            <div key={group.label}>
+              {gi > 0 && <div className="my-3 mx-1" style={{ borderTop: '1px solid #1a1f35' }} />}
+              <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2e3450' }}>
+                {group.label}
+              </p>
+              {group.items.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => { onTabChange(id); onClose(); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+                  style={activeTab === id ? {
+                    background: 'rgba(124,92,255,0.18)',
+                    color: '#a78bfa',
+                    borderLeft: '3px solid #7c5cff',
+                    paddingLeft: '9px',
+                  } : { color: '#4a5070' }}
+                  onMouseEnter={e => { if (activeTab !== id) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#969cb1'; }}}
+                  onMouseLeave={e => { if (activeTab !== id) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#4a5070'; }}}
+                >
+                  <Icon size={16} style={{ color: activeTab === id ? '#7c5cff' : '#4a5070' }} />
+                  {label}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 

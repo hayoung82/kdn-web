@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { ClipboardList, Plus, X, Trash2, ChevronDown, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ClipboardList, Plus, X, Trash2, ChevronDown, Loader2, AlertCircle, CheckCircle2, FileText, Calendar, User, Wrench, Hash } from 'lucide-react';
 
 const CARD = 'rounded-2xl overflow-hidden';
 const CARD_STYLE = { background: '#131829', border: '1px solid #232843' };
@@ -32,6 +32,7 @@ const toReport = (r) => ({
   date: r.date,
   result: r.result,
   note: r.note ?? '',
+  createdAt: r.created_at,
 });
 
 export default function ReportsPage() {
@@ -43,6 +44,7 @@ export default function ReportsPage() {
   const [deleteId, setDeleteId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [detailReport, setDetailReport] = useState(null);
 
   const showToast = useCallback((message, type = 'error') => {
     setToast({ message, type });
@@ -195,8 +197,9 @@ export default function ReportsPage() {
               </thead>
               <tbody>
                 {reports.map((r, i) => (
-                  <tr key={r.id} className="transition-colors group"
+                  <tr key={r.id} className="transition-colors group cursor-pointer"
                       style={{ borderBottom: i === reports.length - 1 ? 'none' : '1px solid #1a1f35' }}
+                      onClick={() => setDetailReport(r)}
                       onMouseEnter={e => e.currentTarget.style.background = '#1a1f35'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <td className="px-5 py-3.5 text-xs font-mono tabular-nums" style={{ color: '#2e3450' }}>{String(reports.length - i).padStart(2, '0')}</td>
@@ -215,7 +218,7 @@ export default function ReportsPage() {
                       <p className="truncate">{r.note}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <button onClick={() => setDeleteId(r.id)}
+                      <button onClick={e => { e.stopPropagation(); setDeleteId(r.id); }}
                         className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all"
                         style={{ color: '#4a5070' }}
                         onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
@@ -341,6 +344,76 @@ export default function ReportsPage() {
                 style={{ background: 'linear-gradient(135deg, #5b21b6 0%, #7c5cff 100%)', boxShadow: '0 4px 16px rgba(124,92,255,0.3)' }}>
                 {submitting && <Loader2 size={14} className="animate-spin" />}
                 {submitting ? '저장 중...' : '등록'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 상세 조회 팝업 */}
+      {detailReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+             onClick={e => e.target === e.currentTarget && setDetailReport(null)}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden"
+               style={{ background: '#131829', border: '1px solid #232843', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
+            {/* 헤더 */}
+            <div className="flex items-start justify-between px-6 py-4" style={{ background: '#0d1120', borderBottom: '1px solid #232843' }}>
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#f4f5f9' }}>{detailReport.equipmentName}</h3>
+                <p className="text-xs mt-0.5" style={{ color: '#4a5070' }}>{detailReport.equipmentId}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold"
+                      style={resultStyle[detailReport.result] || { color: '#969cb1' }}>{detailReport.result}</span>
+                <button onClick={() => setDetailReport(null)} className="p-1.5 rounded-lg" style={{ color: '#4a5070' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseLeave={e => e.currentTarget.style.background = ''}>
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            {/* 내용 */}
+            <div className="p-6 space-y-3">
+              {[
+                { icon: Wrench, label: '점검 유형', value: detailReport.type },
+                { icon: User, label: '담당자', value: detailReport.inspector },
+                { icon: Calendar, label: '점검일', value: detailReport.date },
+                { icon: Hash, label: '설비 ID', value: detailReport.equipmentId || '-' },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#0d1120', border: '1px solid #1a1f35' }}>
+                  <Icon size={14} style={{ color: '#4a5070' }} className="flex-shrink-0" />
+                  <span className="text-xs w-20 flex-shrink-0" style={{ color: '#4a5070' }}>{label}</span>
+                  <span className="text-sm font-semibold" style={{ color: '#f4f5f9' }}>{value}</span>
+                </div>
+              ))}
+              {detailReport.note && (
+                <div className="px-4 py-3 rounded-xl" style={{ background: '#0d1120', border: '1px solid #1a1f35' }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <FileText size={14} style={{ color: '#4a5070' }} />
+                    <span className="text-xs" style={{ color: '#4a5070' }}>비고</span>
+                  </div>
+                  <p className="text-sm leading-relaxed pl-[26px]" style={{ color: '#969cb1' }}>{detailReport.note}</p>
+                </div>
+              )}
+              {detailReport.createdAt && (
+                <p className="text-xs text-right pt-1" style={{ color: '#2e3450' }}>
+                  등록: {new Date(detailReport.createdAt).toLocaleString('ko-KR')}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 flex justify-end gap-2" style={{ borderTop: '1px solid #232843', background: '#0d1120' }}>
+              <button onClick={() => { setDetailReport(null); setDeleteId(detailReport.id); }}
+                className="px-4 py-2 text-sm font-semibold rounded-xl"
+                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}>
+                삭제
+              </button>
+              <button onClick={() => setDetailReport(null)}
+                className="px-4 py-2 text-sm font-semibold rounded-xl"
+                style={{ background: '#1a1f35', color: '#969cb1', border: '1px solid #232843' }}>
+                닫기
               </button>
             </div>
           </div>
