@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { ClipboardList, Plus, X, Trash2, ChevronDown, Loader2 } from 'lucide-react';
+import { ClipboardList, Plus, X, Trash2, ChevronDown, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const CARD = 'rounded-2xl overflow-hidden';
 const CARD_STYLE = { background: '#131829', border: '1px solid #232843' };
@@ -42,6 +42,12 @@ export default function ReportsPage() {
   const [errors, setErrors] = useState({});
   const [deleteId, setDeleteId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = useCallback((message, type = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
 
   // 데이터 로드
   useEffect(() => {
@@ -56,7 +62,7 @@ export default function ReportsPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('데이터 로드 실패:', error.message);
+      showToast('데이터를 불러오는 데 실패했습니다: ' + error.message);
     } else {
       setReports(data.map(toReport));
     }
@@ -92,10 +98,11 @@ export default function ReportsPage() {
       .single();
 
     if (error) {
-      console.error('등록 실패:', error.message);
+      showToast('등록에 실패했습니다: ' + error.message);
     } else {
       setReports(prev => [toReport(data), ...prev]);
       setForm(EMPTY_FORM); setErrors({}); setShowModal(false);
+      showToast('점검 이력이 등록되었습니다.', 'success');
     }
     setSubmitting(false);
   };
@@ -107,7 +114,12 @@ export default function ReportsPage() {
       .delete()
       .eq('id', deleteId);
 
-    if (!error) setReports(prev => prev.filter(r => r.id !== deleteId));
+    if (error) {
+      showToast('삭제에 실패했습니다: ' + error.message);
+    } else {
+      setReports(prev => prev.filter(r => r.id !== deleteId));
+      showToast('삭제되었습니다.', 'success');
+    }
     setDeleteId(null);
   };
 
@@ -119,6 +131,25 @@ export default function ReportsPage() {
   const focusStyle = (hasError) => ({ ...inputStyle, borderColor: hasError ? '#ef4444' : '#232843' });
 
   return (
+    <>
+    {toast && (
+      <div className="fixed top-5 right-5 z-[100] flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-semibold shadow-2xl transition-all"
+           style={{
+             background: toast.type === 'success' ? 'rgba(0,211,167,0.12)' : 'rgba(239,68,68,0.12)',
+             border: `1px solid ${toast.type === 'success' ? 'rgba(0,211,167,0.3)' : 'rgba(239,68,68,0.3)'}`,
+             color: toast.type === 'success' ? '#00d3a7' : '#f87171',
+             backdropFilter: 'blur(8px)',
+             maxWidth: '360px',
+           }}>
+        {toast.type === 'success'
+          ? <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
+          : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
+        <span>{toast.message}</span>
+        <button onClick={() => setToast(null)} className="ml-auto shrink-0 opacity-60 hover:opacity-100">
+          <X size={14} />
+        </button>
+      </div>
+    )}
     <div className="p-6 space-y-5">
 
       <div className="pb-5 flex items-center justify-between" style={{ borderBottom: '1px solid #232843' }}>
@@ -339,5 +370,6 @@ export default function ReportsPage() {
       )}
 
     </div>
+    </>
   );
 }
