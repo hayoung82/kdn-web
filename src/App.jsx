@@ -43,10 +43,6 @@ export default function App() {
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
