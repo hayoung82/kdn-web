@@ -1,20 +1,20 @@
 const statusConfig = {
-  normal:      { label: '정상',   className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-  warning:     { label: '경고',   className: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  fault:       { label: '고장',   className: 'bg-red-50 text-red-700 border border-red-200' },
-  maintenance: { label: '점검중', className: 'bg-[#EFF6FF] text-[#3D6FE0] border border-[#BFDBFE]' },
+  normal:      { label: '정상',   className: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/60' },
+  warning:     { label: '경고',   className: 'bg-amber-950/60 text-amber-400 border border-amber-800/60' },
+  fault:       { label: '고장',   className: 'bg-red-950/60 text-red-400 border border-red-800/60' },
+  maintenance: { label: '점검중', className: 'bg-violet-950/60 text-violet-400 border border-violet-800/60' },
 };
 
 const severityConfig = {
-  critical: { label: '긴급', className: 'bg-red-50 text-red-700 border border-red-200' },
-  warning:  { label: '경고', className: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  info:     { label: '정보', className: 'bg-[#EFF6FF] text-[#3D6FE0] border border-[#BFDBFE]' },
+  critical: { label: '긴급', className: 'bg-red-950/60 text-red-400 border border-red-800/60' },
+  warning:  { label: '경고', className: 'bg-amber-950/60 text-amber-400 border border-amber-800/60' },
+  info:     { label: '정보', className: 'bg-violet-950/60 text-violet-400 border border-violet-800/60' },
 };
 
 const alertStatusConfig = {
-  active:       { label: '활성',   className: 'bg-red-50 text-red-700 border border-red-200' },
-  acknowledged: { label: '확인됨', className: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  resolved:     { label: '해제됨', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  active:       { label: '활성',   className: 'bg-red-950/60 text-red-400 border border-red-800/60' },
+  acknowledged: { label: '확인됨', className: 'bg-amber-950/60 text-amber-400 border border-amber-800/60' },
+  resolved:     { label: '해제됨', className: 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/60' },
 };
 
 export function EquipmentStatusBadge({ status }) {
