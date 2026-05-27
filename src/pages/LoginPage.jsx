@@ -36,6 +36,7 @@ export default function LoginPage({ onLogin }) {
   const [rDept, setRDept] = useState('');
 
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [regDone, setRegDone] = useState(false);
 
@@ -72,16 +73,17 @@ export default function LoginPage({ onLogin }) {
     if (e) {
       setError(e.message.includes('already') ? '이미 등록된 이메일입니다.' : e.message);
       setLoading(false);
-    } else if (data?.session) {
-      // 이메일 인증 비활성화 상태 → 바로 로그인
-      onLogin(data.user);
     } else {
-      // 이메일 인증 필요
-      setRegDone(true); setLoading(false);
+      // 가입 완료 → 로그인 탭으로 이동 + 이메일 자동 입력
+      setEmail(rEmail);
+      setPw('');
+      setTab('login');
+      setSuccess('회원가입이 완료되었습니다. 비밀번호를 입력해 로그인하세요.');
+      setLoading(false);
     }
   };
 
-  const switchTab = (t) => { setTab(t); setError(''); setRegDone(false); };
+  const switchTab = (t) => { setTab(t); setError(''); setSuccess(''); setRegDone(false); };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: '#0b0e17' }}>
@@ -134,6 +136,12 @@ export default function LoginPage({ onLogin }) {
                 style={INPUT_BASE} onFocus={onFocus} onBlur={onBlur} />
             </Field>
 
+            {success && (
+              <div className="flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl"
+                   style={{ background: 'rgba(0,211,167,0.1)', border: '1px solid rgba(0,211,167,0.25)', color: '#00d3a7' }}>
+                <AlertCircle size={13} className="flex-shrink-0" />{success}
+              </div>
+            )}
             {error && (
               <div className="flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl"
                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
