@@ -40,11 +40,18 @@ export default function LoginPage({ onLogin }) {
   const [regDone, setRegDone] = useState(false);
 
   const handleLogin = async () => {
-    if (!email.trim() || !pw.trim()) { setError('이메일과 비밀번호를 입력해주세요.'); return; }
+    if (!email.trim() || !pw.trim()) { setError('아이디/이메일과 비밀번호를 입력해주세요.'); return; }
     setLoading(true); setError('');
+
+    // 기본 관리자 계정
+    if (email.trim() === 'admin' && pw === 'admin') {
+      onLogin({ id: 'admin', email: 'admin', user_metadata: { full_name: '관리자' } });
+      return;
+    }
+
     const { data, error: e } = await supabase.auth.signInWithPassword({ email, password: pw });
     if (e) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      setError('아이디/이메일 또는 비밀번호가 올바르지 않습니다.');
       setLoading(false);
     } else {
       onLogin(data.user);
@@ -58,14 +65,18 @@ export default function LoginPage({ onLogin }) {
     if (rPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return; }
     if (rPw !== rPwc) { setError('비밀번호가 일치하지 않습니다.'); return; }
     setLoading(true);
-    const { error: e } = await supabase.auth.signUp({
+    const { data, error: e } = await supabase.auth.signUp({
       email: rEmail, password: rPw,
       options: { data: { full_name: rName, department: rDept } },
     });
     if (e) {
       setError(e.message.includes('already') ? '이미 등록된 이메일입니다.' : e.message);
       setLoading(false);
+    } else if (data?.session) {
+      // 이메일 인증 비활성화 상태 → 바로 로그인
+      onLogin(data.user);
     } else {
+      // 이메일 인증 필요
       setRegDone(true); setLoading(false);
     }
   };
@@ -110,8 +121,8 @@ export default function LoginPage({ onLogin }) {
         {/* 로그인 폼 */}
         {tab === 'login' && (
           <div className="px-6 py-6 space-y-3">
-            <Field label="이메일" icon={Mail}>
-              <input type="email" placeholder="이메일을 입력하세요" value={email}
+            <Field label="아이디 또는 이메일" icon={Mail}>
+              <input type="text" placeholder="아이디 또는 이메일을 입력하세요" value={email}
                 onChange={e => { setEmail(e.target.value); setError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 style={INPUT_BASE} onFocus={onFocus} onBlur={onBlur} />
