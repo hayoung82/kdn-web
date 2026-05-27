@@ -74,7 +74,8 @@ export default function LoginPage({ onLogin }) {
       setError(e.message.includes('already') ? '이미 등록된 이메일입니다.' : e.message);
       setLoading(false);
     } else {
-      // 가입 완료 → 로그인 탭으로 이동 + 이메일 자동 입력
+      // 이메일 인증 비활성화 시 세션이 자동 생성되므로 즉시 로그아웃
+      await supabase.auth.signOut();
       setEmail(rEmail);
       setPw('');
       setTab('login');
